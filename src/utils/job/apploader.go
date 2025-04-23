@@ -2,6 +2,7 @@ package job
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"main/src/utils/constants"
@@ -15,8 +16,8 @@ var file *os.File
 
 func Init(fileName string) error {
 	var err error
-	if _,err := os.Stat(constants.OUPUT_DIR);err!=nil{
-		os.MkdirAll(constants.OUPUT_DIR,0744)
+	if _, err := os.Stat(constants.OUPUT_DIR); err != nil {
+		os.MkdirAll(constants.OUPUT_DIR, 0744)
 	}
 	file, err = os.Open(fileName)
 	if err != nil {
@@ -30,7 +31,7 @@ func Start(errors []string, needErrors bool) {
 	// Suggested to provide only text data such as pure values or keys
 	//reason: some places "key" :"value" might reach to code as "\"key\""\n
 	// no regex,used purely made by utilizing Index functions available on Strings package
-	__getFileDataMiraeConnectAndProcess(needErrors, errors...)
+	__getFileDataMiraeConnectAndProcess(needErrors, errors...) 
 }
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
@@ -38,8 +39,8 @@ func Start(errors []string, needErrors bool) {
 func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool {
 
 	// file related vars
-	defer file.Close()
 	var cache = make(map[string]string)
+	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	var res = ""
 	fMatched, err1 := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
@@ -60,7 +61,7 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool 
 	for scanner.Scan() {
 		line := scanner.Text()
 		time := strings.Split(line, ",")[0]
-		Erridx := utils.GetErrorIdxCheck(line, Error, needErrors) // Error Existence check
+		Erridx := utils.GtErrorIdxCheck(line, Error, needErrors) // Error Existence check
 		idx := strings.LastIndex(line, "brokerUserId")
 		if idx == -1 || Erridx == -1 {
 			lineNum++
@@ -76,10 +77,10 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool 
 			// res = fmt.Sprintln("Line ", lineNum-1, "Skipped") + res
 			continue
 		}
+		fMatched.Write([]byte(line + "\n"))
 		if _, ok := cache[brokerUserIdStr]; ok {
 			lineNum++
 			matchedErrCound++
-			fMatched.Write([]byte(line + "\n"))
 			continue
 		}
 		cache[brokerUserIdStr] = "Exist"
@@ -88,12 +89,20 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool 
 		fileLineNum++
 		lineNum++
 	}
+	d, err := json.Marshal(utils.Counter)
+	if err != nil {
+		return false
+	}
 
 	f.Write([]byte(res))
+
+	f.Write([]byte(d))
+
+	f.Write([]byte("\n\n\n\n"))
 	f.Write([]byte("\n\n\n\n"))
 	f.Write([]byte("====================================\n"))
-	f.Write([]byte(fmt.Sprintf("Skipped Line Count : %d\n", skipedLines)))
-	f.Write([]byte(fmt.Sprintf("Total Errors on backup.csv : %d\n", lineNum)))
+	f.Write([]byte(fmt.Sprintf("Skipped Line Count : %d\n", skipedLines-1)))
+	f.Write([]byte(fmt.Sprintf("Total Errors on backup.csv : %d\n", lineNum-1)))
 	f.Write([]byte(fmt.Sprintf("Total Errors Filtered : %d\n", matchedErrCound-1)))
 
 	if needErrors {
