@@ -8,7 +8,7 @@ import (
 
 func main() {
 	err := job.Init(constants.GRAFANA_FILE_PATH)
-	errors := []string{"invalid session. Kindly logout and login again", "context deadline exceeded"}
+	errors := []string{ "context deadline exceeded"}
 
 	if err != nil {
 		fmt.Errorf("Error opening file:", err)

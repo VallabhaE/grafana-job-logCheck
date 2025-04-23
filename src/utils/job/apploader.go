@@ -46,14 +46,14 @@ func __getFileDataMiraeConnectAndProcess(Error ...string) {
 		idx := strings.LastIndex(line, "brokerUserId")
 		if idx == -1 || Erridx == -1 {
 			lineNum++
-			file.Write([]byte(fmt.Sprintf("Line ", lineNum-1, "Skipped")))
+			res += fmt.Sprintln("Line ", lineNum-1, "Skipped")
 			continue
 		}
 		brokerUserIdStr := line[idx : idx+30]
 		idx2 := strings.LastIndex(brokerUserIdStr, `,"`)
 		if idx2 == -1 {
 			lineNum++
-			file.Write([]byte(fmt.Sprintf("Line ", lineNum-1, "Skipped")))
+			res += fmt.Sprintln("Line ", lineNum-1, "Skipped")
 			continue
 		}
 		if _, ok := cache[brokerUserIdStr]; ok {
