@@ -31,7 +31,7 @@ func Start(errors []string, needErrors bool) {
 	// Suggested to provide only text data such as pure values or keys
 	//reason: some places "key" :"value" might reach to code as "\"key\""\n
 	// no regex,used purely made by utilizing Index functions available on Strings package
-	__getFileDataMiraeConnectAndProcess(needErrors, errors...) 
+	__getFileDataMiraeConnectAndProcess(needErrors, errors...)
 }
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
@@ -39,8 +39,8 @@ func Start(errors []string, needErrors bool) {
 func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool {
 
 	// file related vars
-	var cache = make(map[string]string)
 	defer file.Close()
+	var cache = make(map[string]string)
 	scanner := bufio.NewScanner(file)
 	var res = ""
 	fMatched, err1 := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
@@ -78,9 +78,10 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool 
 			continue
 		}
 		fMatched.Write([]byte(line + "\n"))
+		matchedErrCound++
+
 		if _, ok := cache[brokerUserIdStr]; ok {
 			lineNum++
-			matchedErrCound++
 			continue
 		}
 		cache[brokerUserIdStr] = "Exist"

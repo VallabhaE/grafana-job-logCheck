@@ -8,7 +8,7 @@ import (
 
 func main() {
 	err := job.Init(constants.GRAFANA_FILE_PATH)
-	errors := []string{`Client.Timeout`, 
+	errors := []string{`Client.Timeout exceeded while awaiting header`, 
 	"invalid session. Kindly logout and login again",
 }
 
