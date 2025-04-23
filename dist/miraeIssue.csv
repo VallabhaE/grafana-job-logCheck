@@ -1,3 +1,4 @@
+Task Triggered at : 2025-04-23 15:10:04
 1: 2025-04-23 12:16:52 brokerUserId"":""MA13857""
 2: 2025-04-23 11:06:40 brokerUserId"":""MA87471""
 3: 2025-04-23 10:39:25 brokerUserId"":""MA1420172""
@@ -60,6 +61,7 @@
 
 ====================================
 Skipped Line Count : 2
-Total Errors on backup.csv : 217
+Total Errors on backup.csv : 219
 Total Errors Filtered : 161
+Read matchedErrors.txt for more details about new errors found other then provided
 ====================================

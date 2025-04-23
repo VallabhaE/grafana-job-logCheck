@@ -2,17 +2,22 @@ package job
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"main/src/utils/constants"
 	"main/src/utils/utils"
 	"os"
 	"strings"
+	"time"
 )
 
 var file *os.File
 
 func Init(fileName string) error {
 	var err error
+	if _,err := os.Stat(constants.OUPUT_DIR);err!=nil{
+		os.MkdirAll(constants.OUPUT_DIR,0744)
+	}
 	file, err = os.Open(fileName)
 	if err != nil {
 		return err
@@ -30,25 +35,28 @@ func Start(errors []string, needErrors bool) {
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
 // change it according to needs further
-func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) {
+func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool {
 
 	// file related vars
 	defer file.Close()
 	var cache = make(map[string]string)
 	scanner := bufio.NewScanner(file)
 	var res = ""
-	fMatched, err := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
+	fMatched, err1 := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
+	f, err2 := os.Create(constants.OUT_FILE_PATH)
+	if err1 != nil || err2 != nil {
+		fmt.Println(errors.Join(err1, err2))
+		return false
 	}
-	defer fMatched.Close()
 
+	defer fMatched.Close()
 	// line number vars
 	lineNum := 1
 	fileLineNum := 1
 	skipedLines := 1
 	matchedErrCound := 1
+
+	f.Write([]byte("Task Triggered at : " + string(time.Now().Format("2006-01-02 15:04:05")+"\n")))
 	for scanner.Scan() {
 		line := scanner.Text()
 		time := strings.Split(line, ",")[0]
@@ -81,17 +89,17 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) {
 		lineNum++
 	}
 
-	f, err := os.Create(constants.OUT_FILE_PATH)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	f.Write([]byte(res))
 	f.Write([]byte("\n\n\n\n"))
 	f.Write([]byte("====================================\n"))
 	f.Write([]byte(fmt.Sprintf("Skipped Line Count : %d\n", skipedLines)))
-	f.Write([]byte(fmt.Sprintf("Total Errors on backup.csv : %d\n", lineNum-skipedLines)))
+	f.Write([]byte(fmt.Sprintf("Total Errors on backup.csv : %d\n", lineNum)))
 	f.Write([]byte(fmt.Sprintf("Total Errors Filtered : %d\n", matchedErrCound-1)))
+
+	if needErrors {
+		f.Write([]byte("Read matchedErrors.txt for more details about new errors found other then provided\n"))
+	}
 	f.Write([]byte("====================================\n"))
 
+	return true
 }

@@ -12,7 +12,8 @@ func main() {
 
 	err := job.Init(constants.GRAFANA_FILE_PATH)
 	errors := []string{`context deadline exceeded (Client.Timeout exceeded while awaiting headers)`, 
-	"invalid session. Kindly logout and login again"}
+	"invalid session. Kindly logout and login again",
+}
 
 	if err != nil {
 		fmt.Errorf("Error opening file:", err)
