@@ -20,43 +20,58 @@ func Init(fileName string) error {
 	return nil
 }
 
-func Start(errors []string) {
+func Start(errors []string, needErrors bool) {
 
 	// Suggested to provide only text data such as pure values or keys
-	//reason: some places "key" :"value" might reach to code as "\"key\""
-	// no regex used purely made by utilizing Index functions available on Strings package
-	__getFileDataMiraeConnectAndProcess(errors...)
+	//reason: some places "key" :"value" might reach to code as "\"key\""\n
+	// no regex,used purely made by utilizing Index functions available on Strings package
+	__getFileDataMiraeConnectAndProcess(needErrors, errors...)
 }
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
 // change it according to needs further
-func __getFileDataMiraeConnectAndProcess(Error ...string) {
+func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) {
 
+	// file related vars
 	defer file.Close()
 	var cache = make(map[string]string)
+	scanner := bufio.NewScanner(file)
 	var res = ""
+	fMatched, err := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer fMatched.Close()
+
+	// line number vars
 	lineNum := 1
 	fileLineNum := 1
-	scanner := bufio.NewScanner(file)
-
+	skipedLines := 1
+	matchedErrCound := 1
 	for scanner.Scan() {
 		line := scanner.Text()
 		time := strings.Split(line, ",")[0]
-		Erridx := utils.GetErrorIdxCheck(line, Error) // Error Existence check
+		Erridx := utils.GetErrorIdxCheck(line, Error, needErrors) // Error Existence check
 		idx := strings.LastIndex(line, "brokerUserId")
 		if idx == -1 || Erridx == -1 {
 			lineNum++
-			res += fmt.Sprintln("Line ", lineNum-1, "Skipped")
+			skipedLines++
+			// res = fmt.Sprintln("Line ", lineNum-1, "Skipped") + res
 			continue
 		}
 		brokerUserIdStr := line[idx : idx+30]
 		idx2 := strings.LastIndex(brokerUserIdStr, `,"`)
 		if idx2 == -1 {
 			lineNum++
-			res += fmt.Sprintln("Line ", lineNum-1, "Skipped")
+			skipedLines++
+			// res = fmt.Sprintln("Line ", lineNum-1, "Skipped") + res
 			continue
 		}
 		if _, ok := cache[brokerUserIdStr]; ok {
+			lineNum++
+			matchedErrCound++
+			fMatched.Write([]byte(line + "\n"))
 			continue
 		}
 		cache[brokerUserIdStr] = "Exist"
@@ -72,4 +87,11 @@ func __getFileDataMiraeConnectAndProcess(Error ...string) {
 		return
 	}
 	f.Write([]byte(res))
+	f.Write([]byte("\n\n\n\n"))
+	f.Write([]byte("====================================\n"))
+	f.Write([]byte(fmt.Sprintf("Skipped Line Count : %d\n", skipedLines)))
+	f.Write([]byte(fmt.Sprintf("Total Errors on backup.csv : %d\n", lineNum-skipedLines)))
+	f.Write([]byte(fmt.Sprintf("Total Errors Filtered : %d\n", matchedErrCound-1)))
+	f.Write([]byte("====================================\n"))
+
 }
