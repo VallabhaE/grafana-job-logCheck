@@ -1,50 +1,66 @@
-package job
+package miraeconnect
 
 import (
 	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"main/src/utils/constants"
-	"main/src/utils/utils"
+	"main/src/modules/constants"
+	"main/src/modules/utils"
 	"os"
 	"strings"
 	"time"
 )
 
-var file *os.File
+type MiraeDefault struct{}
 
-func Init(fileName string) error {
+var MiraeData []string
+
+func initAndProcessData(filename string) {
+	if len(MiraeData) > 0 {
+		return
+	}
 	var err error
 	if _, err := os.Stat(constants.OUPUT_DIR); err != nil {
 		os.MkdirAll(constants.OUPUT_DIR, 0744)
 	}
-	file, err = os.Open(fileName)
+	file, err := os.Open(filename)
+	scanner := bufio.NewScanner(file)
 	if err != nil {
-		return err
+		fmt.Println(err)
+		return
 	}
-	return nil
-}
-
-func Start(errors []string, needErrors bool) {
-
-	// Suggested to provide only text data such as pure values or keys
-	//reason: some places "key" :"value" might reach to code as "\"key\""\n
-	// no regex,used purely made by utilizing Index functions available on Strings package
-	__getFileDataMiraeConnectAndProcess(needErrors, errors...)
+	for scanner.Scan() {
+		line := scanner.Text()
+		MiraeData = append(MiraeData, line)
+	}
+	fmt.Println("Data Loaded for Mirae")
+	return
 }
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
 // change it according to needs further
-func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool {
+func (s *MiraeDefault) GetFileDataMiraeConnectAndProcess(file *os.File, needErrors bool, Error ...string) bool {
 
 	// file related vars
 	defer file.Close()
 	var cache = make(map[string]string)
-	scanner := bufio.NewScanner(file)
+	initAndProcessData(constants.GRAFANA_FILE_PATH)
 	var res = ""
-	fMatched, err1 := os.Create(constants.OUPUT_DIR + "matchedErrors.txt")
-	f, err2 := os.Create(constants.OUT_FILE_PATH)
+	matchedErrorsfName := "matchedErrors.txt"
+	if !needErrors {
+		matchedErrorsfName = "exc" + matchedErrorsfName
+	} else {
+		matchedErrorsfName = "inc" + matchedErrorsfName
+	}
+	fMatched, err1 := os.Create(constants.OUPUT_DIR + matchedErrorsfName)
+	var outFileName string
+	if !needErrors {
+		outFileName = constants.OUPUT_DIR + "exc" + constants.OUT_FILE
+	} else {
+		outFileName = constants.OUPUT_DIR + "inc" + constants.OUT_FILE
+	}
+	f, err2 := os.Create(outFileName)
 	if err1 != nil || err2 != nil {
 		fmt.Println(errors.Join(err1, err2))
 		return false
@@ -58,8 +74,7 @@ func __getFileDataMiraeConnectAndProcess(needErrors bool, Error ...string) bool 
 	matchedErrCound := 1
 
 	f.Write([]byte("Task Triggered at : " + string(time.Now().Format("2006-01-02 15:04:05")+"\n")))
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range MiraeData {
 		time := strings.Split(line, ",")[0]
 		Erridx := utils.GtErrorIdxCheck(line, Error, needErrors) // Error Existence check
 		idx := strings.LastIndex(line, "brokerUserId")
