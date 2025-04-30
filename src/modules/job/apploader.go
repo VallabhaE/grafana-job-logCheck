@@ -20,18 +20,31 @@ func Init(fileName string) error {
 	return nil
 }
 
-
-func Start(errors []string, needErrors bool) {
+func StartMiraeJob(errors []string, needErrors bool) {
 	var dataProcesser factory.Dataprocesser
 	// Suggested to provide only text data such as pure values or keys
 	//reason: some places "key" :"value" might reach to code as "\"key\""\n
 	// no regex,used purely made by utilizing Index functions available on Strings package
 	dataProcesser = factory.Factory(constants.Mirae)
 
+	// process data
+	dataProcesser.GetFileDataConnectAndProcess(file, true, errors...)
+	dataProcesser.GetFileDataConnectAndProcess(file, false, errors...)
+
+}
+
+
+var dataProcesser factory.Dataprocesser
+func StartScrapperJob(errors []string, needErrors bool) {
+	// Suggested to provide only text data such as pure values or keys
+	//reason: some places "key" :"value" might reach to code as "\"key\""\n
+	// no regex,used purely made by utilizing Index functions available on Strings package
+	dataProcesser = factory.Factory(constants.Scrapper)
 
 	// process data
-	dataProcesser.GetFileDataMiraeConnectAndProcess(file, true, errors...)
-	dataProcesser.GetFileDataMiraeConnectAndProcess(file, false, errors...)
+	dataProcesser.GetFileDataConnectAndProcess(file, true, errors...)
+	dataProcesser.GetFileDataConnectAndProcess(file, false, errors...)
+	
 
 
 }

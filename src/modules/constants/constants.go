@@ -11,4 +11,5 @@ var (
 
 const (
 	Mirae = "Mirae"
+	Scrapper = "Scrapper"
 )

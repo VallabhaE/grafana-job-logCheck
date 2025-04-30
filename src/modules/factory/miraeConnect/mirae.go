@@ -40,7 +40,7 @@ func initAndProcessData(filename string) {
 
 // func purely expects brokerUserId which means works only for authorized user api calls only,
 // change it according to needs further
-func (s *MiraeDefault) GetFileDataMiraeConnectAndProcess(file *os.File, needErrors bool, Error ...string) bool {
+func (s *MiraeDefault) GetFileDataConnectAndProcess(file *os.File, needErrors bool, Error ...string) bool {
 
 	// file related vars
 	defer file.Close()
